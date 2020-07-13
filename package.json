@@ -1,0 +1,16 @@
+{
+  "name": "strength-table-generator",
+  "version": "1.0.0",
+  "description": "Local compact version of matchup-evaluator (deprecated)",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "shingaryu",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^5.1.0",
+    "log4js": "^1.1.1",
+    "moment": "^2.27.0",
+    "percymon": "git+https://github.com/shingaryu/showdownbot.git#develop"
+  }
+}
