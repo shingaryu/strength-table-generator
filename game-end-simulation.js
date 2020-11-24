@@ -62,45 +62,55 @@ function simulateToGameEnd(weights, oneOnOneRepetition, minimaxDepth, minimaxRep
         battle.start();              
         battle.makeRequest();                   
 
-        const limitSteps = 100;
+        const limitSteps = 20;
         let i = 0;
-        for (i = 0; i < limitSteps; i++) {
-          console.log(`Step ${i}`);
+        for (i = 1; i <= limitSteps; i++) {
+          console.log(`\nStep: ${i}, Turn: ${battle.turn}`);
+
+          const { p1Choices } = Util.parseRequest(battle.p1.request);
+          const minimaxDecision = minimax.decide(Util.cloneBattle(battle), p1Choices, minimaxDepth);
+
+          if (battle.p1.request.wait) {
+            const p2BestChoice = minimaxDecision.tree.action;
+            battle.choose('p2', Util.toChoiceString(p2BestChoice, battle.p2), battle.rqid);
+            console.log("Player action: (wait)");
+            console.log("Opponent action: " + Util.toChoiceString(p2BestChoice, battle.p2));            
+          } else if (battle.p2.request.wait) {
+            const p1BestChoice = minimaxDecision.tree.action;             
+            battle.choose('p1', Util.toChoiceString(p1BestChoice, battle.p1), battle.rqid);
+            console.log("Player action: " + Util.toChoiceString(p1BestChoice, battle.p1));
+            console.log("Opponent action: (wait)");            
+          } else {
+            const p1BestChoice = minimaxDecision.tree.action;
+
+            if (minimaxDecision.tree.type !== 'max') {
+              throw new Error('Child tree of root is not maximum tree. this is likely caused because this turn p1 has a wait request')                
+            }
+            const p1BestChoiceTree = minimaxDecision.tree.children.find(x => x.value === minimaxDecision.tree.value);
+            if (p1BestChoiceTree.type !== 'min') {
+              throw new Error('Child tree of p1 best choice is not minimum tree. this is likely caused because this turn p2 has a wait request')                
+            }
+            const p2BestChoice = p1BestChoiceTree.action;
+            
+            battle.choose('p1', Util.toChoiceString(p1BestChoice, battle.p1), battle.rqid);
+            battle.choose('p2', Util.toChoiceString(p2BestChoice, battle.p2), battle.rqid);
+            console.log("Player action: " + Util.toChoiceString(p1BestChoice, battle.p1));
+            console.log("Opponent action: " + Util.toChoiceString(p2BestChoice, battle.p2));            
+          }
+
+          showBothSideHp(battle);
           if (battle.ended) {
             console.log(`battle ended!`);
             console.log(`winner: ${battle.winner}`)
             console.log()
             repeatedOneOnOneValues.push({ myTeam: p1.team, steps: i, winner: battle.winner});
-            break;
+            break;  
+          } else if (i === limitSteps) {
+            throw new Error(`battle did not finished within ${limitSteps} steps`);
           } else {
-            console.log(`battle continuing...`);
-            
-            if (!battle.p1.request.wait) {
-              const p1Request = Util.parseRequest(battle.p1.request);
-              const p1Choices = p1Request.choices;
-              // const selected = p1Choices[Math.floor(Math.random() * p1Choices.length)]
-              const minimaxDecision = minimax.decide(Util.cloneBattle(battle), p1Choices, minimaxDepth);
-              const selected = {id: minimaxDecision.id, priority: minimaxDecision.priority, type: minimaxDecision.type};
-
-              battle.choose('p1', Util.toChoiceString(selected, battle.p1), battle.rqid);
-              console.log("Player action: " + Util.toChoiceString(selected || '(wait)', battle.p1));
-            }
-
-            if (!battle.p2.request.wait) {
-              const p2Request = Util.parseRequest(battle.p2.request);
-              const p2Choices = p2Request.choices;
-              const selected = p2Choices[Math.floor(Math.random() * p2Choices.length)]
-              battle.choose('p2', Util.toChoiceString(selected, battle.p2), battle.rqid);
-              console.log("Opponent action: " + Util.toChoiceString(selected || '(wait)', battle.p2));            
-            }
-            
-            showBothSideHp(battle);
-          }        
-        }
-      
-        if (i === limitSteps) {
-          throw new Error(`battle did not finished within ${limitSteps} steps`);
-        }
+            continue;
+          }
+        }     
       } // end loop of oneononerepetition
       let stepSum = 0.0;
       repeatedOneOnOneValues.forEach(x => stepSum += x.steps);
