@@ -45,11 +45,13 @@ function simulateToGameEnd(weights, oneOnOneRepetition, minimaxDepth, minimaxRep
   const targetSelections = threeOfAllCombinations(targetPokemons).slice(0, 1);
 
   logger.info("start evaluating game end win/lose...")
+  const calculatedAt = moment().format('YYYY-MM-DD HH:mm:ss');
   const minimax = new Minimax(false, minimaxRepetiton, false, weights);
   const evalValueTable = [];
+  const results = [];
   for (let i = 0; i < teamSelections.length; i++) {
     const myTeam = teamSelections[i];  
-    const evalRecord = [];
+    // const evalRecord = [];
     for (let j = 0; j < targetSelections.length; j++) {
       const oppTeam = targetSelections[j];
       logger.info(`Simulate about ${teamPokemonStr(myTeam)} vs ${teamPokemonStr(oppTeam)}`);
@@ -63,9 +65,9 @@ function simulateToGameEnd(weights, oneOnOneRepetition, minimaxDepth, minimaxRep
         battle.makeRequest();                   
 
         const limitSteps = 20;
-        let i = 0;
-        for (i = 1; i <= limitSteps; i++) {
-          console.log(`\nStep: ${i}, Turn: ${battle.turn}`);
+        let l = 0;
+        for (l = 1; l <= limitSteps; l++) {
+          console.log(`\nStep: ${l}, Turn: ${battle.turn}`);
 
           const { p1Choices } = Util.parseRequest(battle.p1.request);
           const minimaxDecision = minimax.decide(Util.cloneBattle(battle), p1Choices, minimaxDepth);
@@ -103,14 +105,26 @@ function simulateToGameEnd(weights, oneOnOneRepetition, minimaxDepth, minimaxRep
             console.log(`battle ended!`);
             console.log(`winner: ${battle.winner}`)
             console.log()
-            repeatedOneOnOneValues.push({ myTeam: p1.team, steps: i, winner: battle.winner});
+            repeatedOneOnOneValues.push({ myTeam: p1.team, steps: l, winner: battle.winner});
             break;  
-          } else if (i === limitSteps) {
+          } else if (l === limitSteps) {
             throw new Error(`battle did not finished within ${limitSteps} steps`);
           } else {
             continue;
           }
-        }     
+        }
+
+        const result = {
+          p1Team: teamSelections[i],
+          p2Team: targetSelections[j],
+          winner: battle.winner === 'botPlayer' ? 0: 1,
+          turns: battle.turn,
+          p1PokeHp: battle.p1.pokemon.map(x => x.hp),
+          p2PokeHp: battle.p2.pokemon.map(x => x.hp),
+          calculatedAt: calculatedAt
+        }
+
+        results.push(result);
       } // end loop of oneononerepetition
       let stepSum = 0.0;
       repeatedOneOnOneValues.forEach(x => stepSum += x.steps);
