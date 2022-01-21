@@ -9,7 +9,7 @@
   "license": "MIT",
   "dependencies": {
     "commander": "^5.1.0",
-    "log4js": "^6.3.0",
+    "log4js": "^6.4.0",
     "moment": "^2.27.0",
     "percymon": "git+https://github.com/shingaryu/showdownbot.git#develop"
   }
