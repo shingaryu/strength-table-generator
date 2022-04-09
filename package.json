@@ -10,7 +10,7 @@
   "dependencies": {
     "commander": "^5.1.0",
     "log4js": "^6.3.0",
-    "moment": "^2.27.0",
+    "moment": "^2.29.2",
     "percymon": "git+https://github.com/shingaryu/showdownbot.git#develop"
   }
 }
